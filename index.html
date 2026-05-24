@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>心智光谱自我探索测试</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC','Microsoft YaHei',sans-serif;background:#f5f7fa;color:#333;font-size:14px;overflow-x:hidden}
+.page{display:none;width:100%;min-height:100vh;padding-bottom:20px;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== Loading ===== */
+#loading-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;color:#fff;cursor:pointer;animation:splashFade 0.4s ease 2s forwards}
+#loading-screen.hidden{opacity:0;pointer-events:none;animation:none}
+@keyframes splashFade{0%{opacity:1}99%{opacity:0;pointer-events:none}100%{opacity:0;pointer-events:none}}
+.loading-icon{font-size:48px;margin-bottom:16px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.loading-title{font-size:22px;font-weight:700;letter-spacing:4px}
+.loading-sub{font-size:13px;opacity:.7;margin-top:6px}
+.loading-tap{font-size:11px;opacity:.6;margin-top:20px}
+
+/* ===== Header ===== */
+.header{background:linear-gradient(135deg,#667eea,#764ba2);padding:46px 20px 50px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.header::after{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,.12) 0%,transparent 70%);border-radius:50%}
+.header-icon{font-size:48px;margin-bottom:8px}
+.header h1{font-size:30px;font-weight:800;letter-spacing:6px}
+.header .sub{font-size:16px;font-weight:500;margin-top:4px;opacity:.9}
+.header .desc{font-size:13px;opacity:.7;margin-top:8px;line-height:1.5}
+
+/* Card */
+.card{background:#fff;border-radius:16px;margin:-24px 14px 12px;padding:22px 18px;box-shadow:0 4px 20px rgba(0,0,0,.08);position:relative;z-index:1}
+
+/* Guide */
+.guide{margin:0 14px 12px}
+.guide-title{font-size:15px;font-weight:700;margin-bottom:10px}
+.guide-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.guide-item:last-child{border-bottom:none}
+.guide-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.guide-text{font-size:14px;color:#555}
+
+/* Stats row */
+.stats{display:flex;justify-content:space-around;padding:14px 0 6px;margin-top:10px;border-top:1px solid #f0f0f0}
+.stat{text-align:center}
+.stat-num{font-size:17px;font-weight:800;color:#667eea}
+.stat-label{font-size:11px;color:#999;margin-top:2px}
+
+/* Start btn */
+.btn-start{display:block;width:calc(100% - 28px);margin:8px 14px 16px;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-align:center;border-radius:14px;font-size:18px;font-weight:700;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(102,126,234,.4);letter-spacing:2px;transition:all .2s}
+.btn-start:active{transform:scale(.97);opacity:.9}
+
+/* Type grid */
+.grid-title{text-align:center;font-size:15px;font-weight:700;margin:12px 0 10px;color:#333}
+.type-grid{display:flex;flex-wrap:wrap;gap:10px;padding:0 14px}
+.type-item{width:calc((100% - 20px)/3);background:#fff;border-radius:14px;padding:14px 4px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;transition:transform .2s}
+.type-item:active{transform:scale(.95)}
+.type-circle{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:5px}
+.type-circle span{font-size:20px}
+.type-name{font-size:13px;font-weight:600;color:#333}
+.type-sub{font-size:10px;color:#999;margin-top:2px;line-height:1.3}
+.footer{text-align:center;font-size:11px;color:#bbb;padding:16px 20px 20px;line-height:1.6}
+
+/* ===== Test Page ===== */
+.test-header{padding:14px 16px}
+.test-progress{height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden}
+.test-progress-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:3px;transition:width .3s}
+.test-progress-info{display:flex;justify-content:space-between;margin-top:5px;font-size:12px;color:#999}
+.test-progress-info .pct{color:#667eea;font-weight:600}
+
+.q-card{background:#fff;border-radius:16px;margin:4px 14px;padding:22px 18px 18px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.q-tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.q-num{font-size:12px;color:#bbb}
+.q-text{font-size:16px;line-height:1.7;color:#222;font-weight:500;margin-bottom:22px}
+
+/* Options */
+.options{display:flex;flex-direction:column;gap:10px}
+.option{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;border:2px solid #eee;cursor:pointer;transition:all .2s}
+.option.active-yes{border-color:#2ECC71;background:#F0FFF4}
+.option.active-no{border-color:#E74C3C;background:#FFF5F5}
+.option-dot{width:22px;height:22px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.option.active-yes .option-dot{border-color:#2ECC71;background:#2ECC71}
+.option.active-no .option-dot{border-color:#E74C3C;background:#E74C3C}
+.option-dot-inner{width:8px;height:8px;border-radius:50%;background:#fff}
+.option-content{display:flex;flex-direction:column;gap:1px}
+.option-label{font-size:15px;font-weight:600;color:#333}
+.option.active-yes .option-label{color:#1a7a42}
+.option.active-no .option-label{color:#a93226}
+.option-desc{font-size:11px;color:#999}
+
+/* Nav */
+.nav{display:flex;gap:10px;margin:10px 14px}
+.nav-btn{flex:1;padding:13px 0;border-radius:12px;font-size:15px;font-weight:600;text-align:center;cursor:pointer;border:none;transition:all .2s}
+.nav-btn:active{transform:scale(.97)}
+.nav-prev{background:#f0f0f0;color:#666}
+.nav-prev.hidden{visibility:hidden;pointer-events:none}
+.nav-next{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 12px rgba(102,126,234,.3)}
+.nav-next:disabled{opacity:.4;box-shadow:none;cursor:not-allowed;transform:none}
+
+/* ===== Result Page ===== */
+.r-banner{padding:34px 20px 28px;text-align:center;color:#fff}
+.r-badge{font-size:12px;opacity:.8;margin-bottom:4px}
+.r-icon{font-size:48px;margin-bottom:6px}
+.r-name{font-size:28px;font-weight:800}
+.r-sub{font-size:14px;opacity:.8;margin-top:2px}
+.r-code{font-size:12px;opacity:.7;margin-top:6px;background:rgba(255,255,255,.15);display:inline-block;padding:2px 12px;border-radius:20px}
+.r-score{font-size:13px;opacity:.85;margin-top:10px}
+.r-bar-bg{width:180px;height:7px;background:rgba(255,255,255,.25);border-radius:4px;margin:6px auto 0;overflow:hidden}
+.r-bar-fill{height:100%;background:rgba(255,255,255,.75);border-radius:4px;transition:width 1s ease}
+.r-motto{font-size:13px;font-style:italic;opacity:.8;margin-top:10px}
+
+/* Top 3 */
+.top3-wrap{margin:-18px 14px 10px;position:relative;z-index:1}
+.top3-title{font-size:15px;font-weight:700;text-align:center;margin-bottom:10px}
+.top3-row{display:flex;gap:8px}
+.top3-card{flex:1;background:#fff;border-radius:14px;padding:12px 6px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.top3-gold{border:2px solid #FFD700;transform:scale(1.04)}
+.top3-silver{border:1px solid #e0e0e0}
+.top3-bronze{border:1px solid #e0e0e0}
+.top3-medal{font-size:18px;margin-bottom:2px}
+.top3-icon{font-size:26px;margin-bottom:3px}
+.top3-name{font-size:13px;font-weight:700}
+.top3-sub{font-size:9px;color:#999;line-height:1.2;margin-top:2px}
+.top3-score{font-size:11px;color:#666;margin-top:4px;font-weight:600}
+
+/* Sections */
+.sec{background:#fff;border-radius:16px;margin:8px 14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.sec-title{font-size:15px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f0f0f0}
+.sec-text{font-size:13px;line-height:1.8;color:#555;white-space:pre-wrap}
+.sec-text strong{color:#333}
+.chart{margin:4px 0}
+.chart-row{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.chart-rank{width:16px;font-size:10px;font-weight:700;color:#999;text-align:center;flex-shrink:0}
+.chart-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.chart-label{width:48px;font-size:11px;font-weight:600;text-align:right;flex-shrink:0;color:#444}
+.chart-bar-bg{flex:1;height:16px;background:#f0f0f0;border-radius:8px;overflow:hidden}
+.chart-bar-fill{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding-right:3px;transition:width .8s ease}
+.chart-bar-text{font-size:9px;color:#fff;font-weight:600}
+.chart-num{width:40px;font-size:10px;color:#999;flex-shrink:0}
+.tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{padding:4px 10px;border-radius:20px;font-size:11px;line-height:1.5}
+.tag-str{background:#f0f8ff;color:#4a7db5}
+.tag-wk{background:#fff5f5;color:#c0392b}
+.fd-item{margin-bottom:8px}
+.fd-item:last-child{margin-bottom:0}
+.fd-label{font-size:11px;font-weight:600;color:#667eea}
+.fd-val{font-size:13px;color:#555;line-height:1.5;margin-top:1px}
+
+.actions{display:flex;gap:10px;margin:14px}
+.actions button{flex:1;padding:13px 0;border-radius:12px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.actions button:active{transform:scale(.97)}
+.btn-retake{background:#f0f0f0;color:#666}
+.btn-share{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 12px rgba(102,126,234,.3)}
+
+/* Toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:200;display:none}
+.toast.show{display:block;animation:fadeIn .3s}
+
+/* Dark mode */
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a2e;color:#e0e0e0}
+  .card,.q-card,.sec,.type-item,.top3-card{background:#25253e}
+  .guide-item{border-color:#333}
+  .stats{border-color:#333}
+  .guide-text{color:#ccc}
+  .chart-label{color:#aaa}
+  .chart-bar-bg{background:#333}
+  .chart-rank{color:#555}
+  .chart-num{color:#555}
+  .q-text{color:#e0e0e0}
+  .sec-title{border-bottom-color:#333;color:#e0e0e0}
+  .sec-text{color:#bbb}
+  .sec-text strong{color:#ddd}
+  .r-motto{opacity:.7}
+  .option{border-color:#3a3a5c}
+  .option.active-yes{border-color:#2ECC71;background:#1a3a2a}
+  .option.active-no{border-color:#E74C3C;background:#3a2020}
+  .option-label{color:#e0e0e0}
+  .option-desc{color:#888}
+  .nav-prev{background:#333;color:#aaa}
+  .tag-str{background:#2a2a4a;color:#90b4d9}
+  .tag-wk{background:#3a2020;color:#e77}
+  .btn-retake{background:#333;color:#aaa}
+  .grid-title{color:#ccc}
+  .type-name{color:#e0e0e0}
+  .type-sub{color:#888}
+  .footer{color:#555}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen" onclick="this.classList.add('hidden')">
+  <div class="loading-icon">✨</div>
+  <div class="loading-title">心智光谱</div>
+  <div class="loading-sub">自我探索测试</div>
+  <div class="loading-tap">👆 点击进入</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ========== HOME ========== -->
+<div class="page active" id="page-home">
+  <div class="header">
+    <div class="header-icon">🧩</div>
+    <h1>心智光谱</h1>
+    <div class="sub">自我探索测试</div>
+    <div class="desc">108 道题 · 9 大光谱维度<br>发现你的内在心智模型</div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px;">🧭 关于本测试</div>
+    <p style="font-size:13px;line-height:1.7;color:#555;">心智光谱测试通过 <strong style="color:#667eea;">108 道精心设计的题目</strong>，帮助您探索自己的核心心智模型。请在自然放松状态下，凭第一感觉回答，无需过多思考。</p>
+    <div class="stats">
+      <div class="stat"><div class="stat-num">108</div><div class="stat-label">道题目</div></div>
+      <div class="stat"><div class="stat-num">9</div><div class="stat-label">种光谱</div></div>
+      <div class="stat"><div class="stat-num">15分</div><div class="stat-label">预计用时</div></div>
+      <div class="stat"><div class="stat-num">Top3</div><div class="stat-label">结果展示</div></div>
+    </div>
+  </div>
+
+  <div class="guide card" style="margin-top:0;">
+    <div class="guide-title">📌 答题指引</div>
+    <div class="guide-item"><span class="guide-num">1</span><span class="guide-text">每题选择「符合」或「不符合」</span></div>
+    <div class="guide-item"><span class="guide-num">2</span><span class="guide-text">凭第一直觉回答，不要犹豫</span></div>
+    <div class="guide-item"><span class="guide-num">3</span><span class="guide-text">无需预判自己属于哪种型号</span></div>
+    <div class="guide-item"><span class="guide-num">4</span><span class="guide-text">真诚回答才能获得准确的自我认知</span></div>
+  </div>
+
+  <button class="btn-start" onclick="startTest()">🚀 开始探索自我</button>
+
+  <div class="grid-title">九大心智光谱</div>
+  <div class="type-grid" id="typeGrid"></div>
+  <div class="footer">请在 15 分钟内完成 · 祝您探索愉快</div>
+</div>
+
+<!-- ========== TEST ========== -->
+<div class="page" id="page-test">
+  <div class="test-header">
+    <div class="test-progress"><div class="test-progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="test-progress-info">
+      <span id="progressText">1 / 108</span>
+      <span class="pct" id="progressPct">0%</span>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-tag" id="qTag" style="background:#667eea20;color:#667eea">澄明</span>
+      <span class="q-num" id="qNum">#1</span>
+    </div>
+    <div class="q-text" id="qText">加载题目中...</div>
+    <div class="options">
+      <div class="option" id="optYes" onclick="selectYes()">
+        <div class="option-dot"><div class="option-dot-inner"></div></div>
+        <div class="option-content">
+          <span class="option-label">✓ 符合</span>
+          <span class="option-desc">这条描述符合我的情况</span>
+        </div>
+      </div>
+      <div class="option" id="optNo" onclick="selectNo()">
+        <div class="option-dot"><div class="option-dot-inner"></div></div>
+        <div class="option-content">
+          <span class="option-label">✗ 不符合</span>
+          <span class="option-desc">这条描述不符合我的情况</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn nav-prev hidden" id="btnPrev" onclick="prevQ()">← 上一题</button>
+    <button class="nav-btn nav-next" id="btnNext" disabled onclick="nextQ()">下一题 →</button>
+  </div>
+</div>
+
+<!-- ========== RESULT ========== -->
+<div class="page" id="page-result">
+  <div class="r-banner" id="rBanner">
+    <div class="r-badge">🥇 首要光谱</div>
+    <div class="r-icon" id="rIcon">💎</div>
+    <div class="r-name" id="rName">澄明</div>
+    <div class="r-sub" id="rSub">清透如镜 · 明辨是非</div>
+    <div class="r-code" id="rCode">心智光谱第1型</div>
+    <div class="r-score" id="rScore">12 / 12 题符合</div>
+    <div class="r-bar-bg"><div class="r-bar-fill" id="rBarFill" style="width:0%"></div></div>
+    <div class="r-motto" id="rMotto">"格物致知，诚意正心"</div>
+  </div>
+
+  <div class="top3-wrap">
+    <div class="top3-title">🏆 你的心智光谱 Top 3</div>
+    <div class="top3-row" id="top3Row"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">📊 完整光谱分布</div>
+    <div class="chart" id="scoreChart"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">💎 核心特质</div>
+    <div class="sec-text" id="rCore"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">📝 性格描述</div>
+    <div class="sec-text" id="rDesc"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">💪 优势与天赋</div>
+    <div class="tags" id="rStrength"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🌱 成长方向</div>
+    <div class="tags" id="rWeakness"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🔍 基本恐惧 · 基本渴望</div>
+    <div class="fd-item"><div class="fd-label">基本恐惧</div><div class="fd-val" id="rFear"></div></div>
+    <div class="fd-item"><div class="fd-label">基本渴望</div><div class="fd-val" id="rDesire"></div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">💼 适合职业方向</div>
+    <div class="sec-text" id="rCareer"></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">🌿 个人成长建议</div>
+    <div class="sec-text" id="rGrowth"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-retake" onclick="retake()">🔄 重新测试</button>
+    <button class="btn-share" onclick="shareResult()">📤 分享结果</button>
+  </div>
+
+  <div class="footer">* 本测试结果仅供参考，更准确的判断需要投入更多自我观察，建议在专业人士指导下进行。</div>
+</div>
+
+<script>
+// ===== DATA =====
+const QUESTIONS = [
+  {id:1,type:4,text:'我是独特的，我的内在很丰盛。我内心常常有波折起伏的感受，可能会呈现在我的诗歌、绘画、文字、音乐里，但很难向别人表达。'},
+  {id:2,type:5,text:'我喜欢研究宇宙的道理、哲理，在人类知识的海洋中探索遨游。'},
+  {id:3,type:2,text:'我是个热情的助人者，对我而言，看到并满足他人的需求是很重要的。我喜欢别人对我的依赖和需要，让我很有价值感。'},
+  {id:4,type:3,text:'我做事目标感强，行动力快，追求效率。只要确立目标，我就不会疑惑一往直前，我相信车到山前必有路。'},
+  {id:5,type:9,text:'我是一个性格温和平静的人，与人无争，于世无害，随遇而安、平易近人。'},
+  {id:6,type:6,text:'安全对我很重要，我小心谨慎，做事之前，我会做最坏打算，设想各种糟糕的可能，提前做出应对方案。'},
+  {id:7,type:7,text:'我觉得人生就该不停体验那些开心快乐、好玩有趣、冒险刺激的人和事。快乐和自由对我很重要，我不喜欢被拘束，会努力让自己活得多姿多彩。'},
+  {id:8,type:8,text:'我有天生的领导力和感召力，能把握大局，控制人与事，扫除障碍，带领大家开创新天地。'},
+  {id:9,type:1,text:'我很容易看到别人做事的不足，并在内心评判，即使表面没有批评。'},
+  {id:10,type:2,text:'我会很自然而然地帮助别人，让他人得到快乐和成功甚至比我自己得到还重要，施比受会给我更大的满足感。'},
+  {id:11,type:3,text:'我喜欢竞争和彰显成就的环境，我不怕竞争，全力以赴地赢对我很重要。从小到大的经历让我相信只有赢者才有价值，世上无难事，只怕有心人。'},
+  {id:12,type:4,text:'我是孤独的存在，没有人明白我理解我，这对我而言是一件痛苦难过的事情。'},
+  {id:13,type:5,text:'他人可能认为我的兴趣爱好比较复杂、怪异甚至不合实际的，我投入很多时间精力，不求现实的回报。'},
+  {id:14,type:6,text:'我很重视承诺，没有十分把握不轻易承诺，一旦承诺，我会负责到底。总体来说，责任义务对我很重要。'},
+  {id:15,type:7,text:'我是个充满活力、擅于社交的人，很多人都羡慕我反应敏捷、风趣幽默的口才。'},
+  {id:16,type:8,text:'我坚定自信、独立自主，我相信一切靠自己打拼。我的强大自信让很多人依赖我、跟随我。'},
+  {id:17,type:9,text:'我喜欢平静、舒服的感觉，身体上的舒适对我非常重要，我向来能轻易入睡。'},
+  {id:18,type:1,text:'别人不按规则完事，会让我失望。我相信批评使人进步，人无完人都可能犯错，但要知错就改，屡教不改是品性问题，会让我十分愤怒。'},
+  {id:19,type:2,text:'我相信只有付出，才有回报，我习惯付出多于接受。但如果有人对我一直的付出没有表达感激，我还是会很生气。'},
+  {id:20,type:3,text:'我似乎天生善于社交，见不同人说不同话，有人说我富有外交手腕、有魅力、有野心，有人说我常戴着面具做人。'},
+  {id:21,type:4,text:'我很感性，生活中的悲伤和不幸很容易触碰到我的内心，春花秋月会泛起我内心深深浅浅的忧郁。人们因我沉静、独特及深沉而关注到我。'},
+  {id:22,type:5,text:'我倾向自己思考问题，找出解决答案。他人很认可我的分析思辨、逻辑洞察及知识体系。'},
+  {id:23,type:6,text:'我是个很实际的人，不会被人用高收益、大蓝图说服，我会谨慎评判可行性，反复思考后再做决定。我是有条理且审慎的。'},
+  {id:24,type:7,text:'我喜欢冒险，愿意尝试新鲜事物，面对全新的可能，我通常会先问自己这是否有趣。'},
+  {id:25,type:8,text:'我鄙视脆弱，看不起那些不坚强的人，有时我会各种羞辱他们。我也看不惯那些仗势欺人的人，如果他们太过分，我定会让他难堪。'},
+  {id:26,type:9,text:'我不想发生任何争执与冲突，生活工作中如果有压力，我宁愿息事宁人，适应他人。别人批评我，我也不会回应和辩解。'},
+  {id:27,type:1,text:'我是循规蹈矩的人，秩序对我十分重要。我喜欢每个人都按部就班，每件事都井然有序。也许有人会认为我过分执著，没有弹性。'},
+  {id:28,type:2,text:'我很敏感于他人的感受和需要，很容易看到他人的特质和优点，会用温暖的言语和关怀的行为让他人喜欢我。'},
+  {id:29,type:3,text:'我外向热情、精力充沛，自我感觉十分良好，不怵于在公众场成为焦点，享受人群中明星的感觉。'},
+  {id:30,type:4,text:'这个世界是不完美的，我也是不完美的。我有一种与生俱来的被遗弃的感觉，挥之不去。'},
+  {id:31,type:5,text:'我对人际交往不感兴趣，除非是熟识老友和喜爱的人。一般性的社交会给我带来压力，在人群中我常常感到害羞和不安。'},
+  {id:32,type:6,text:'我对自己不是很有信心，对他人也不是很有信心，需要很长时间的了解，才能成为互相信任，成为长久忠实的朋友和伙伴。'},
+  {id:33,type:7,text:'我有很多爱好，我很佩服自己对新事物开放的态度和快速掌握新技能的本事。'},
+  {id:34,type:8,text:'我要求公平公正、光明正大，面对不公，我会不惜与人冲突，跳出来保护弱者、主持正义。'},
+  {id:35,type:9,text:'我喜欢保持心中的平静和生活的稳定，我一直努力使自己的生活规律、稳定且平和。和谐对我来说非常重要。'},
+  {id:36,type:1,text:'看到别人犯错，我会压抑内心的愤怒，清晰冷静地指出他们的错误所在以及我的要求，我不会象有些人那样失去自控、大发雷霆。'},
+  {id:37,type:2,text:'我是一个热情开放、乐观友善的人，我很愿意分享自己的个人话题，也期待朋友们跟我分享。也许有人会觉得我没有边界感，这给我带来人际关系的困扰。'},
+  {id:38,type:3,text:'我是一个天生的销售员，说服别人对我来说轻而易举，营销自己也不觉得难为情。我对自己的能力很有信心，常夸耀自己。'},
+  {id:39,type:4,text:'在大多数人面前，我会表现得沉默寡言、清淡冷漠、矜持高傲，可能会让人有距离感。有人说我孤芳自赏。'},
+  {id:40,type:5,text:'做决定对我而言不难，只是需要时间收集数据、整理架构、梳理逻辑、全面评估，再得出答案。'},
+  {id:41,type:6,text:'我喜欢在团体中找到归属感和安全感，和朋友们相互依赖，抱团取暖。有一个安全的窝可以依靠，对我来说很踏实。'},
+  {id:42,type:7,text:'我做事比较随兴，没有足够自制力，计划没有变化快，我通常会根据自己的感觉与冲动行事，最后结果就偏离了最初的计划。'},
+  {id:43,type:8,text:'我坚强果断，可能有时自以为是、执著好强，让周围的人感觉到压力。'},
+  {id:44,type:9,text:'不争就是大争，要以和为贵，朋友们争论时，我也会尽力劝解，避免伤和气。我很容易看到大家的共同点，求同存异。'},
+  {id:45,type:1,text:'有人说我表情严肃而生硬，缺少笑容。我确实不太懂幽默，不习惯热情交流、甜言蜜语，我喜欢说话简单直接、不绕弯子。'},
+  {id:46,type:2,text:'我喜欢与人交往，相比较目标导向，我更关注人际关系，公司应该是个充满友爱的大家庭。'},
+  {id:47,type:3,text:'为了追求效率，我会找捷径，我不固执僵化，可以牺牲完美和小原则。我一向以自己的灵活性、创造性为傲。'},
+  {id:48,type:4,text:'总体而言，我是内向悲观、易感伤的。我容易情绪化，喜怒哀乐多变，有时很快乐时，也不知为什么忽然有淡淡的忧伤涌上心头。'},
+  {id:49,type:5,text:'我在物质上要求不高，生活简朴，我喜欢生活在自己独立的小世界里，远离世间纷扰，安静学习知识。'},
+  {id:50,type:6,text:'我特别反感虚伪，对人的动机很敏感。我常常试探考验朋友和伴侣的忠诚。'},
+  {id:51,type:7,text:'我喜欢纵情享受新奇的体验和强烈的刺激，无论是美食、服装、身体，还是冒险、旅游、交友。人生得意须尽欢，我不想让自己错过生活中的美好。'},
+  {id:52,type:8,text:'我的强大自信让我不自觉地成为团队的主心骨和领导者。我会极力保护我的人，因为我的力量勇气和严厉武断，经常让人对我又爱又怕。'},
+  {id:53,type:9,text:'我接受别人比自己好，同时对自己不会有太多要求，小富即安，稳定就好。按自己喜爱的节奏行事，慢慢来，事情总会越来越好的。'},
+  {id:54,type:1,text:'我相信细节决定成败。也会因为专注细节、格式、规则而导致效率不高。也许有时过于保守僵化。'},
+  {id:55,type:2,text:'我是个心太软的人，经常对他人有求必应，帮助不到别人会让我觉得痛苦，有时甚至把别人的问题自己抗。'},
+  {id:56,type:3,text:'我喜欢告诉别人我的不懈努力和辉煌成就，表现得精力满满、能力十足，我不会让人看到我低落失败的一面。'},
+  {id:57,type:4,text:'我似乎有天生的直觉灵感、独特的创造天赋和艺术感。我是浪漫的，富想象力的。我在穿着上有一种与人不同的品味。'},
+  {id:58,type:5,text:'我对我感兴趣的知识体系会全神贯注地投入，对与人相处发展关系不甚感兴趣，我的价值来自于全面专业知识、客观冷静思考、清晰理智分析。'},
+  {id:59,type:6,text:'我遵守规则，希望事情按部就班，不要变来变去。但我可能没意识到自己因为患得患失经常改变既定方案。'},
+  {id:60,type:7,text:'我爱好广泛、活泼生动、风趣健谈，面对陌生人，我可以快速建立友谊。我努力让自己成为有趣的灵魂，懒得与无聊的闷蛋打交道。'},
+  {id:61,type:8,text:'我相信天将降大任，我野心勃勃，享受登高振臂一呼、让全世界知道我存在的感觉。'},
+  {id:62,type:9,text:'我一向不喜欢受到压力，也不会施压于人。在大多情况中，我宁可让他人占据领导地位，自己成为团队的底色。'},
+  {id:63,type:1,text:'我坚守原则、认真做事、不循私情的秉性得到他人的认可与信赖，我以自己的坚持立场和原则为傲。'},
+  {id:64,type:3,text:'我是个实用主义者，面对新情境，我通常会问这对我是否有用。为了成功，我会自动调整自己的感受，做自己不喜欢的事，与自己不喜欢的人相处。'},
+  {id:65,type:4,text:'我一直是凭直觉、跟着感觉走的人。我的敏感成就了我的灵性，也让我容易受伤，活在自我的情绪里，这会影响到我的人际关系。'},
+  {id:66,type:5,text:'我是个边界感很强的人，倾向和他人保持距离，过度的人际交往会让我耗竭，我不想依赖别人，喜欢互不打扰。'},
+  {id:67,type:6,text:'我机警谨慎，却往往做事犹豫不决、拖泥带水，一旦觉得没有安全感，我可能会奋起反击、防卫辩护。'},
+  {id:68,type:7,text:'我有无穷的想法和精力、各种创意和计划，专注一事或放慢脚步对我确实是个问题。'},
+  {id:69,type:8,text:'我喜欢向别人挑战，不怕冲突，对着干会让我兴奋。我不怕困难，越挫越勇。一旦冲突，绝不退让。'},
+  {id:70,type:9,text:'当别人的观点和我不一致时，我会很容易同意他人、回避争执。也许我的包容接纳让我太容易放弃自己的立场，而被他人摆布。'},
+  {id:71,type:1,text:'我对自己很有信心，但对别人做的事总是不放心，往往一再检查批评。若还达不到理想效果，我常会自己动手。有时我的一再要求会令人不悦。'},
+  {id:72,type:2,text:'我拥有关怀的心、奉献的精神，参加公益活动对我来说是很重要的。我常常因为过度地关注和帮助他人的事而忽略了我自己的事。'},
+  {id:73,type:3,text:'我是目标导向的人，通常能够置个人感情于一旁而将工作完成，在不重要的人际关系里时常表现得冷淡疏远。'},
+  {id:74,type:4,text:'我渴望遇到灵魂伴侣，但人海茫茫，得之我幸，不得我命。我经常会强烈地为爱痴狂，得到后又觉得不是我所要，索然无味。'},
+  {id:75,type:5,text:'面对热闹纷扰，我会选择超然旁观。面对他人压力，我常更加缄默，尽管我有自己认定的态度。和朋友争论，我会拿出自己的分析，坚持我的观点。'},
+  {id:76,type:6,text:'我容易紧张焦虑，不安全感及疑虑常常让我过度担心，陷入苦恼。'},
+  {id:77,type:7,text:'面临困难或麻烦，我可能不会给自己太多压力，会先放松犒劳下自己，到最后关头再做就好。'},
+  {id:78,type:8,text:'面对敌人，我会表现得比自己本身更加坚强有力，我会压抑自己内心的感受，热血上头，我相信狭路相逢勇者胜。'},
+  {id:79,type:9,text:'我是一个愉快、随和的人，很不容易生气，也许相应的感觉更多的是有些沮丧或麻木。'},
+  {id:80,type:1,text:'无规矩不成方圆，我坚持原则不妥协、也许对人要求过多。对我而言，打破规则、放人一马、增加弹性，是非常不负责任的。'},
+  {id:81,type:2,text:'我期待我的付出被人认可，他人能够按我的希望行事，如果不能这样我会很生气，也许在我的温暖热情下面有着挺强的控制欲。'},
+  {id:82,type:3,text:'我是个积极主动的自我实现者，靠自己完成任何事情，不依赖他人。大体而言，我勤奋努力、认真自律、热爱工作、追求成功，有人说我是工作狂。'},
+  {id:83,type:4,text:'我很容易陷在情绪情感里面，被过去那些得不到的和已失去的抓住，为爱所伤，在品尝痛苦中沉沦迷失。'},
+  {id:84,type:5,text:'我倾向说话条理清晰、简单明了，我冷静理智，很少情绪化。希望别人问我问题，也不要泛泛笼统、参杂个人情绪情感。'},
+  {id:85,type:6,text:'我优柔寡断，做决定对我来说常常很困难。当我不知怎么办时，我会问来问去、反复权衡，经常因为犹豫不决、患得患失而错失机会。'},
+  {id:86,type:7,text:'我不喜欢死扣细节，面对难题，我会尝试不同做法，看看有哪些更轻松有效的办法、事半功倍的捷径。'},
+  {id:87,type:8,text:'我是个独断专权、我行我素的人，只可以我改变别人，不可以别人改变我。如果有人对立，我通常会直接反击。'},
+  {id:88,type:9,text:'我通常讨厌压力大、甚至困难的状况，逆境会让我迷惑不知所以，然后受挫并退缩。'},
+  {id:89,type:1,text:'我喜欢物放有序、干净整洁的生活环境，我无法理解为什么有些人生活一团糟的环境里，还能如此轻松快乐。'},
+  {id:90,type:2,text:'我会用肢体接触来表达我对他人的好感，也许对方会觉得我过于亲密。'},
+  {id:91,type:3,text:'被别人认可欣赏对我很重要的，我努力表现让他人看到我的能力、我的才华，我的付出。'},
+  {id:92,type:4,text:'在情绪低落时，我会丧失行动力，这时我会躲起来自己舔舐伤口，等调整好才能重新工作。有人会认为我过于情绪化、缺少责任心。'},
+  {id:93,type:5,text:'我很注重个人隐私，不愿意和他人分享我的私人信息、感受想法。在人际关系上，我是内向、相对被动的。'},
+  {id:94,type:6,text:'我不太相信任何确定的答案，包括自己的想法和别人的建议，我依赖权威也习惯性地质疑权威。'},
+  {id:95,type:7,text:'我有一颗年轻的心，无关年龄，我每天充满活力享受人生，总是看到生活中美好积极的方面，人生苦短，何必为难自己。'},
+  {id:96,type:8,text:'我是个急脾气，我向来胆大妄为且跋扈专权。当我生气时，我会高声斥责，以气势压伏，动摇对方的军心。'},
+  {id:97,type:9,text:'遇到问题，通常我会拖延，不去解决，最后让大事化小、小事化了。懒惰一直是我的主要议题。'},
+  {id:98,type:1,text:'整体而言，我自认是个严肃认真、道德高尚的人，会依循自己的良知与理性行事。'},
+  {id:99,type:2,text:'我很享受帮助别人走出困苦，但是当我有困难时，我却不好意思求助。'},
+  {id:100,type:3,text:'逆境只会让我更加坚强刚毅，更加全力以赴去战胜困难。我相信失败是暂时的，坚持到底就会成功。'},
+  {id:101,type:4,text:'如果我喜欢，我会大胆自我表白，好像这种勇敢和我平日的小心平静完全是二个人。'},
+  {id:102,type:5,text:'我时常因过分专注于自己的世界而忽略了身边的人。和人相处，我的理智冷静可能会被他人认为冷淡疏离。'},
+  {id:103,type:6,text:'我能提前感知危险到来，焦虑地准备预案。当真正面对危险时，我可能反而克服焦虑、冷静应对，有一种临危不惧的勇气。'},
+  {id:104,type:7,text:'我有聪明大脑和多维创造力，会打破常规，提出很多新计划、新点子。我喜欢不受限制地放手发挥，有时可能会做出放纵和僭越的事。'},
+  {id:105,type:8,text:'我喜欢直接了当、坦诚相对，讨厌拐弯抹角、拖泥带水。我享受与朋友们大吃大喝的爽快。'},
+  {id:106,type:9,text:'我很容易跟随别人，经常忘记自己的需要。或许我一直都太被动、不够投入。'},
+  {id:107,type:1,text:'我对自己高标准严要求，严以律己在先，期待不断改善自己的缺点，追求完美。'},
+  {id:108,type:6,text:'我爱依惯例行事，不大喜欢改变。'}
+];
+
+const TYPES = {
+  1:{number:1,name:'澄明',color:'#4A90D9',icon:'💎',subtitle:'清透如镜 · 明辨是非',motto:'格物致知，诚意正心',summary:'澄明型的人追求清晰、秩序与完美，内心有着强烈的道德准则和是非标准。',basicFear:'害怕犯错、模糊不清、道德沦丧',basicDesire:'渴望清晰、正确、有序、有原则',core_trait:'追求完美与秩序，以高标准要求自己和他人',strengths:['原则性强，道德标准清晰','做事严谨认真，追求高质量','善于发现问题和改进空间','自省能力强，不断自我完善'],weaknesses:['容易苛责自己和他人','完美主义导致拖延','难以放松，过度执着细节','容易显得挑剔和缺乏弹性'],career:'审计、质量控制、编辑、法官、教师、项目管理、数据分析',growth:'练习接纳"足够好"而非"完美"；放下非黑即白的思维；学会欣赏过程中的美；允许自己和他人有犯错的空间。',description:'澄明型的人内心有一面清晰的镜子，时刻映照着对错与是非。他们追求卓越与秩序，有强烈的道德感和责任感。\n\n他们严谨自律，是值得信赖的伙伴和同事，做事认真负责、一丝不苟。他们的内心驱动力是"把事情做对"。\n\n在健康状态下，他们能将原则与灵活结合，既有坚守也不失温暖。在压力下，容易变得挑剔、刻板，对微小错误过度反应。'},
+  2:{number:2,name:'共振',color:'#E8836B',icon:'💗',subtitle:'心弦共鸣 · 温暖连接',motto:'以心换心，助人自助',summary:'共振型的人温暖慷慨，善于感知他人需求，在付出与连接中找到价值。',basicFear:'害怕不被需要、不被爱、被拒绝',basicDesire:'渴望被爱、被感激、被需要',core_trait:'通过帮助他人获得爱与被爱的感觉',strengths:['温暖体贴，共情力强','乐于付出，慷慨大方','善于建立和维系人际关系','能敏锐察觉他人的情绪变化'],weaknesses:['容易忽略自己的需求','过度讨好，难以说"不"','通过付出来换取关注','付出不被看见时易生怨气'],career:'心理咨询、教育、医护、HR、社工、客户服务、公益事业',growth:'学会先爱自己再爱他人；练习表达真实感受而非只展示好的一面；接纳"不被所有人喜欢"的事实；建立平等的关系边界。',description:'共振型的人像一座情感共鸣箱，总能敏锐地接收到他人的频率并做出回应。他们温暖、慷慨，把"被需要"视为幸福的源泉。\n\n他们善解人意，是团队中的暖心担当，总能让人感到被理解和关怀。\n\n健康状态下，他们既能真诚付出也能照顾好自己的需求。在压力下，可能过度牺牲自我，甚至通过操控来获取关注。'},
+  3:{number:3,name:'聚焦',color:'#4ECDC4',icon:'🎯',subtitle:'目标如炬 · 志在必得',motto:'一心一意，成就非凡',summary:'聚焦型的人目标明确、行动力强，在追求成功与认可中不断超越自我。',basicFear:'害怕失败、被认为没有价值',basicDesire:'渴望成功、被认可、令人羡慕',core_trait:'以成就定义自我价值，追求效率与卓越',strengths:['目标感强，行动力出色','善于自我激励','适应能力强，形象管理出色','效率高，善于多任务处理'],weaknesses:['过度关注外在评价','容易工作狂，忽略内心','害怕暴露真实自我','将失败等同于自我价值丧失'],career:'销售、市场、企业家、演员、项目经理、公关、管理者',growth:'区分"你是谁"和"你做了什么"；允许自己有低谷时刻；练习慢下来感受而非不断追逐；建立独立于外在认可的内在价值感。',description:'聚焦型的人像一束激光，目标明确、穿透力强。他们天生追求效率和成就，总能在各个领域取得令人瞩目的成果。\n\n他们注重形象和表现，懂得展现自己最有魅力的一面。在社交中是焦点人物。\n\n健康状态下，他们是卓越的领导者和实干家。在压力下，容易陷入"形象焦虑"，用工作来证明自己的价值。'},
+  4:{number:4,name:'极光',color:'#B07CD8',icon:'🌌',subtitle:'瑰丽深邃 · 独一无二',motto:'做真实的自己，即使与众不同',summary:'极光型的人情感深邃、富有创造力，一生追求真实、独特与生命的意义。',basicFear:'害怕平庸、没有身份、不重要',basicDesire:'渴望独特、真实、有深度',core_trait:'追求独特性和真实的自我表达',strengths:['创造力丰富，审美独特','情感深刻，富有艺术气质','真实坦诚，不随波逐流','善于内省，自我认知深刻'],weaknesses:['容易沉溺负面情绪','常感被误解或格格不入','倾向于疏离和忧郁','嫉妒他人的幸福或成就'],career:'艺术家、设计师、作家、心理咨询师、音乐人、演员、导演',growth:'练习感恩和关注已拥有的美好；区分"真实感受"与"沉溺情绪"；多参与团体活动减少孤独感；发现平凡日常的价值。',description:'极光型的人像夜空中变幻的极光，瑰丽而独特。他们情感丰富、敏感深邃，一生都在寻找真实的自己。\n\n他们有着独特的审美品味，常在艺术、设计、音乐中展现非凡才华。不随波逐流，渴望表达真实的自我。\n\n健康状态下能把丰富情感转化为创造性表达。在压力下容易陷入忧郁和自怜，关注缺失多于拥有。'},
+  5:{number:5,name:'星芒',color:'#5B9BD5',icon:'🌟',subtitle:'冷靜洞察 · 智识如星',motto:'知而后行，思辨致远',summary:'星芒型的人冷静理性，热爱知识，通过深度思考和分析来理解世界。',basicFear:'害怕无知、无能、被侵入',basicDesire:'渴望知识、能力、自给自足',core_trait:'以知识和理性分析作为理解世界的方式',strengths:['思维缜密，分析力强','独立自主，不依赖他人','学习能力强，知识渊博','冷静客观，不易被情绪左右'],weaknesses:['情感疏离，社交冷淡','过度理性，忽视情感需求','囤积知识而不行动','害怕亲密，保持距离'],career:'科学家、工程师、程序员、分析师、教授、研究员、哲学家',growth:'主动走入人际关系，分享内心世界；接受"知道得差不多"而非非要"完全掌握"；练习表达情感；将知识转化为行动。',description:'星芒型的人像夜空中理性的星光，冷静而明亮。他们对世界充满好奇，渴望深入理解一切事物的本质。\n\n知识和智力是最宝贵的资源，喜欢独处思考，在社交中是倾听者。\n\n健康状态下能将深刻洞察与实际行动结合。在压力下会变得退缩疏离，用知识囤积抵御对无能的恐惧。'},
+  6:{number:6,name:'巡航',color:'#F5A623',icon:'⚓',subtitle:'稳健航行 · 忠诚守护',motto:'谨慎前行，忠诚可靠',summary:'巡航型的人谨慎忠诚，警觉性强，在安全与信任中寻找方向。',basicFear:'害怕危险、不确定、被背叛',basicDesire:'渴望安全、安心、可信赖',core_trait:'通过预见风险和建立信任来获得安全感',strengths:['忠诚可靠，全心付出','预见性强，善于规避风险','责任感强，做事稳健','危机时刻的勇气'],weaknesses:['过度焦虑，放大风险','多疑，难以信任','优柔寡断，反复确认','对权威要么依赖要么反抗'],career:'安全顾问、审计、风控、警察、法律工作、心理咨询、质检',growth:'练习相信自己和他人；区分"真实危险"和"想象的危险"；培养果断决策的能力；找到内心的安全感来源。',description:'巡航型的人像一艘稳健航行的船，时刻关注前方的风险。他们谨慎可靠，是值得信赖的朋友和伙伴。\n\n他们的思维方式是"提前想到最坏情况，做好准备"。对信任的人无比忠诚。\n\n健康状态下警觉性与勇气并重。在压力下变得焦虑多疑，要么过度依赖权威，要么叛逆对抗。'},
+  7:{number:7,name:'跃彩',color:'#FF8A65',icon:'🌈',subtitle:'斑斓多姿 · 乐享人生',motto:'人生多彩，开心至上',summary:'跃彩型的人乐观开朗，热爱自由，在丰富多彩的体验中找到生命的意义。',basicFear:'害怕痛苦、无聊、被限制',basicDesire:'渴望快乐、满足、自由',core_trait:'通过追求新体验和乐趣来逃避痛苦与限制',strengths:['乐观积极，充满正能量','多才多艺，兴趣广泛','善于变通，适应力强','富有创造力和想象力'],weaknesses:['难以坚持，半途而废','逃避痛苦和负面情绪','过度追求享乐','害怕承诺和被束缚'],career:'创业、创意策划、旅游、演艺、培训师、设计师、活动策划',growth:'练习专注完成一件事；勇敢面对负面情绪而非逃开；享受平凡安静的时光；发展深度关系而非广度关系。',description:'跃彩型的人像一道斑斓的彩虹，充满活力与色彩。他们是快乐的追寻者和冒险家，对新事物永远充满好奇。\n\n讨厌被束缚，向往自由。在社交中风趣幽默，是人群中的开心果。\n\n健康状态下能将热情与专注结合。在压力下用不停追逐体验来逃避内心的空虚，停下来就感到焦虑。'},
+  8:{number:8,name:'炽核',color:'#E74C3C',icon:'🔥',subtitle:'炽热核心 · 力量担当',motto:'我即力量，守护正义',summary:'炽核型的人自信果断、保护弱小，在掌控与挑战中彰显力量。',basicFear:'害怕被控制、被伤害、显得软弱',basicDesire:'渴望掌控、独立、有影响力',core_trait:'用力量和掌控来保护自己和他人',strengths:['自信果断，决断力强','保护弱小，正义感强','行动力强，推动事情发生','坦诚直接，不玩心机'],weaknesses:['容易强势压倒他人','对抗性太强，让人压迫','不愿示弱，拒绝脆弱','过度控制，难以放手'],career:'创业者、管理者、军人、律师、政治家、教练、警察',growth:'练习"适度放手"，信任他人；认识脆弱不是软弱；学习倾听和尊重不同意见；发展温和的领导力。',description:'炽核型的人像一颗炽热的核心，充满力量和能量。他们天生具有领导力，敢于直面冲突，遇强则强。\n\n有强烈的正义感，保护弱小、反对不公。在团队中自然成为话事人。\n\n健康状态下能为他人而用力量。在压力下变得专横控制，用强硬外表掩盖内心脆弱。'},
+  9:{number:9,name:'柔光',color:'#90A4AE',icon:'☁️',subtitle:'柔和之光 · 包容万物',motto:'和而不同，天下大同',summary:'柔光型的人温和包容，追求和谐，在平静与接纳中找到自己的位置。',basicFear:'害怕冲突、分离、失去和谐',basicDesire:'渴望内心平静、环境和谐',core_trait:'通过回避冲突和维持和谐来获得内心的平静',strengths:['温和友善，亲和力强','善于倾听，包容不同','调解能力强，团队粘合剂','随遇而安，适应力强'],weaknesses:['回避冲突，压抑感受','优柔寡断，难做决定','被动消极，陷入惯性','自我价值感低，忽视个人需求'],career:'调解员、教师、社工、心理咨询、客户服务、行政管理、护理',growth:'练习表达自己的观点和需求；敢于为自己做决定；主动争取而非被动等待；认识并相信自己的价值。',description:'柔光型的人像柔和的月光，温润而包容。他们内心渴望和平，害怕冲突，善于站在不同角度理解每个人。\n\n随和友善，是出色的倾听者和调解人。在团队中自然地是润滑剂。\n\n健康状态下包容性与自主性并重。在压力下选择回避问题，用"一切还好"麻痹自己，被压抑的愤怒可能以被动攻击爆发。'}
+};
+
+const TYPE_LIST=[{n:1},{n:2},{n:3},{n:4},{n:5},{n:6},{n:7},{n:8},{n:9}];
+
+// ===== STATE =====
+let currentIdx = 0;
+let answers = {};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function(){
+  renderTypeGrid();
+  setTimeout(()=>document.getElementById('loading-screen').classList.add('hidden'),400);
+});
+
+function renderTypeGrid(){
+  const g=document.getElementById('typeGrid');
+  g.innerHTML=TYPE_LIST.map(t=>{
+    const d=TYPES[t.n];
+    return '<div class="type-item" onclick="showType('+t.n+')"><div class="type-circle" style="background:'+d.color+'"><span>'+d.icon+'</span></div><div class="type-name">'+d.name+'</div><div class="type-sub">'+d.subtitle+'</div></div>';
+  }).join('');
+}
+
+function showType(n){
+  const d=TYPES[n];
+  showToast(d.icon+' '+d.name+'\n'+d.subtitle+'\n\n'+d.summary+'\n\n基本恐惧：'+d.basicFear+'\n基本渴望：'+d.basicDesire,4000);
+}
+
+// ===== TEST =====
+function startTest(){
+  currentIdx=0;
+  answers={};
+  showPage('page-test');
+  renderQ(0);
+}
+
+function renderQ(i){
+  const q=QUESTIONS[i], t=TYPES[q.type];
+  document.getElementById('qTag').textContent=t.name;
+  document.getElementById('qTag').style.background=t.color+'20';
+  document.getElementById('qTag').style.color=t.color;
+  document.getElementById('qNum').textContent='#'+(i+1);
+  document.getElementById('qText').textContent=q.text;
+
+  const pct=Math.round((i+1)/QUESTIONS.length*100);
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=(i+1)+' / '+QUESTIONS.length;
+  document.getElementById('progressPct').textContent=pct+'%';
+
+  document.getElementById('optYes').className='option';
+  document.getElementById('optNo').className='option';
+  if(answers[q.id]===true) document.getElementById('optYes').className='option active-yes';
+  else if(answers[q.id]===false) document.getElementById('optNo').className='option active-no';
+
+  const btnPrev=document.getElementById('btnPrev');
+  btnPrev.classList.toggle('hidden',i===0);
+
+  const btnNext=document.getElementById('btnNext');
+  btnNext.textContent=i===QUESTIONS.length-1?'查看结果 →':'下一题 →';
+  btnNext.disabled=answers[q.id]===undefined;
+}
+
+function selectYes(){
+  const q=QUESTIONS[currentIdx];
+  answers[q.id]=true;
+  document.getElementById('optYes').className='option active-yes';
+  document.getElementById('optNo').className='option';
+  document.getElementById('btnNext').disabled=false;
+}
+function selectNo(){
+  const q=QUESTIONS[currentIdx];
+  answers[q.id]=false;
+  document.getElementById('optNo').className='option active-no';
+  document.getElementById('optYes').className='option';
+  document.getElementById('btnNext').disabled=false;
+}
+function nextQ(){
+  if(answers[QUESTIONS[currentIdx].id]===undefined){showToast('请先做出选择');return}
+  if(currentIdx===QUESTIONS.length-1){calcResult();return}
+  renderQ(++currentIdx);
+}
+function prevQ(){
+  if(currentIdx>0) renderQ(--currentIdx);
+}
+
+// ===== RESULT =====
+function calcResult(){
+  const scores={};for(let t=1;t<=9;t++)scores[t]=0;
+  const maxScores={};for(let t=1;t<=9;t++)maxScores[t]=0;
+  for(const q of QUESTIONS){if(answers[q.id]===true)scores[q.type]++;maxScores[q.type]++;}
+  const pcts={};for(let t=1;t<=9;t++)pcts[t]=maxScores[t]>0?Math.round(scores[t]/maxScores[t]*100):0;
+  const rank=Object.entries(scores).map(([t,s])=>({type:+t,score:s,max:maxScores[t],pct:pcts[t]})).sort((a,b)=>b.score-a.score);
+  const p=rank[0].type,s=rank[1]?.type,th=rank[2]?.type;
+  showResult({scores,maxScores,pcts,primaryType:p,secondaryType:s,thirdType:th,rank,primaryData:TYPES[p],secondaryData:s?TYPES[s]:null,thirdData:th?TYPES[th]:null,pScore:rank[0].score,pMax:rank[0].max,pPct:rank[0].pct,sScore:rank[1]?.score??0,thScore:rank[2]?.score??0});
+}
+
+function showResult(r){
+  const pd=r.primaryData;
+  const c=pd.color;
+  const dk=darken(c,40);
+  document.getElementById('rBanner').style.background='linear-gradient(135deg,'+c+' 0%,'+dk+' 100%)';
+  document.getElementById('rIcon').textContent=pd.icon;
+  document.getElementById('rName').textContent=pd.name;
+  document.getElementById('rSub').textContent=pd.subtitle;
+  document.getElementById('rCode').textContent='心智光谱第'+pd.number+'型';
+  document.getElementById('rScore').textContent=r.pScore+' / '+r.pMax+' 题符合';
+  document.getElementById('rBarFill').style.width=r.pPct+'%';
+  document.getElementById('rMotto').textContent='"'+pd.motto+'"';
+
+  // Top 3
+  const t3=document.getElementById('top3Row');
+  const items=[
+    r.secondaryData?{...r.secondaryData,score:r.sScore,medal:'🥈',cls:'top3-silver'}:null,
+    {...pd,score:r.pScore,medal:'🥇',cls:'top3-gold'},
+    r.thirdData?{...r.thirdData,score:r.thScore,medal:'🥉',cls:'top3-bronze'}:null
+  ].filter(Boolean).sort((a,b)=>b.score-a.score);
+  t3.innerHTML=items.map(d=>'<div class="top3-card '+d.cls+'"><div class="top3-medal">'+d.medal+'</div><div class="top3-icon">'+d.icon+'</div><div class="top3-name">'+d.name+'</div><div class="top3-sub">'+d.subtitle+'</div><div class="top3-score">'+d.score+'题</div></div>').join('');
+
+  // Chart
+  const ch=document.getElementById('scoreChart');
+  ch.innerHTML='';
+  const sorted=[];
+  for(let t=1;t<=9;t++){
+    const rk=r.rank.findIndex(x=>x.type===t)+1;
+    const dd=TYPES[t];
+    sorted.push({rank:rk,type:t,name:dd.name,icon:dd.icon,color:dd.color,score:r.scores[t],max:r.maxScores[t],pct:r.pcts[t]});
+  }
+  sorted.forEach(d=>{
+    ch.innerHTML+='<div class="chart-row"><span class="chart-rank">'+d.rank+'</span><span class="chart-icon">'+d.icon+'</span><span class="chart-label">'+d.name+'</span><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:'+d.pct+'%;background:'+d.color+'"><span class="chart-bar-text">'+(d.pct>=15?d.pct+'%':'')+'</span></div></div><span class="chart-num">'+d.score+'/'+d.max+'</span></div>';
+  });
+
+  // Sections
+  document.getElementById('rCore').textContent=pd.core_trait;
+  document.getElementById('rDesc').textContent=pd.description;
+  document.getElementById('rStrength').innerHTML=pd.strengths.map(s=>'<span class="tag tag-str">✓ '+s+'</span>').join('');
+  document.getElementById('rWeakness').innerHTML=pd.weaknesses.map(s=>'<span class="tag tag-wk">△ '+s+'</span>').join('');
+  document.getElementById('rFear').textContent=pd.basicFear;
+  document.getElementById('rDesire').textContent=pd.basicDesire;
+  document.getElementById('rCareer').textContent=pd.career;
+  document.getElementById('rGrowth').textContent=pd.growth;
+
+  showPage('page-result');
+  window.scrollTo(0,0);
+}
+
+function darken(hex,a){
+  const n=parseInt(hex.replace('#',''),16);
+  const r=Math.max(0,(n>>16)-a),g=Math.max(0,((n>>8)&0xFF)-a),b=Math.max(0,(n&0xFF)-a);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function retake(){
+  if(confirm('确定要重新测试吗？当前结果将被清除。')){answers={};currentIdx=0;showPage('page-home')}
+}
+
+function shareResult(){
+  const pd=TYPES[(()=>{const s={};for(let t=1;t<=9;t++)s[t]=0;for(const q of QUESTIONS)if(answers[q.id]===true)s[q.type]++;let m=0,p=1;for(let t=1;t<=9;t++)if(s[t]>m){m=s[t];p=t}return p})()];
+  const txt='✨ 我的心智光谱测试结果 ✨\n\n主要光谱：'+pd.name+'（'+pd.subtitle+'）\n"'+pd.motto+'"\n\n来探索你的心智光谱吧！https://...';
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>showToast('结果已复制，快去分享吧！')).catch(()=>{})}
+  else showToast('请截图分享你的结果');
+}
+
+// ===== UTILS =====
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showToast(msg,time){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),time||2000);
+}
+
+// Keyboard
+document.addEventListener('keydown',function(e){
+  const test=document.getElementById('page-test');
+  if(!test.classList.contains('active'))return;
+  if(e.key==='ArrowRight'||e.key==='Enter'){e.preventDefault();nextQ()}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prevQ()}
+  else if(e.key==='y'||e.key==='Y')selectYes();
+  else if(e.key==='n'||e.key==='N')selectNo();
+});
+</script>
+</body>
+</html>
