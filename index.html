@@ -191,7 +191,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC'
 </head>
 <body>
 
-<div id="loading-screen" onclick="this.classList.add('hidden')">
+<div id="loading-screen">
   <div class="loading-icon">✨</div>
   <div class="loading-title">心智光谱</div>
   <div class="loading-sub">自我探索测试</div>
@@ -228,7 +228,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC'
     <div class="guide-item"><span class="guide-num">4</span><span class="guide-text">真诚回答才能获得准确的自我认知</span></div>
   </div>
 
-  <button class="btn-start" onclick="startTest()">🚀 开始探索自我</button>
+  <button class="btn-start" id="btnStart">🚀 开始探索自我</button>
 
   <div class="grid-title">九大心智光谱</div>
   <div class="type-grid" id="typeGrid"></div>
@@ -252,14 +252,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC'
     </div>
     <div class="q-text" id="qText">加载题目中...</div>
     <div class="options">
-      <div class="option" id="optYes" onclick="selectYes()">
+      <div class="option" id="optYes">
         <div class="option-dot"><div class="option-dot-inner"></div></div>
         <div class="option-content">
           <span class="option-label">✓ 符合</span>
           <span class="option-desc">这条描述符合我的情况</span>
         </div>
       </div>
-      <div class="option" id="optNo" onclick="selectNo()">
+      <div class="option" id="optNo">
         <div class="option-dot"><div class="option-dot-inner"></div></div>
         <div class="option-content">
           <span class="option-label">✗ 不符合</span>
@@ -270,8 +270,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC'
   </div>
 
   <div class="nav">
-    <button class="nav-btn nav-prev hidden" id="btnPrev" onclick="prevQ()">← 上一题</button>
-    <button class="nav-btn nav-next" id="btnNext" disabled onclick="nextQ()">下一题 →</button>
+    <button class="nav-btn nav-prev hidden" id="btnPrev">← 上一题</button>
+    <button class="nav-btn nav-next" id="btnNext" disabled>下一题 →</button>
   </div>
 </div>
 
@@ -335,8 +335,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC'
   </div>
 
   <div class="actions">
-    <button class="btn-retake" onclick="retake()">🔄 重新测试</button>
-    <button class="btn-share" onclick="shareResult()">📤 分享结果</button>
+    <button class="btn-retake" id="btnRetake">🔄 重新测试</button>
+    <button class="btn-share" id="btnShare">📤 分享结果</button>
   </div>
 
   <div class="footer">* 本测试结果仅供参考，更准确的判断需要投入更多自我观察，建议在专业人士指导下进行。</div>
@@ -477,13 +477,32 @@ let answers = {};
 document.addEventListener('DOMContentLoaded', function(){
   renderTypeGrid();
   setTimeout(()=>document.getElementById('loading-screen').classList.add('hidden'),400);
+
+  // Bind all event listeners (replaces onclick for WeChat WKWebView compatibility)
+  document.getElementById('loading-screen').addEventListener('click',function(){this.classList.add('hidden')});
+  document.getElementById('btnStart').addEventListener('click',startTest);
+  document.getElementById('optYes').addEventListener('click',selectYes);
+  document.getElementById('optNo').addEventListener('click',selectNo);
+  document.getElementById('btnPrev').addEventListener('click',prevQ);
+  document.getElementById('btnNext').addEventListener('click',nextQ);
+  document.getElementById('btnRetake').addEventListener('click',retake);
+  document.getElementById('btnShare').addEventListener('click',shareResult);
+
+  // Event delegation for type grid
+  document.getElementById('typeGrid').addEventListener('click',function(e){
+    const item=e.target.closest('.type-item');
+    if(item){
+      const n=parseInt(item.getAttribute('data-type'));
+      if(n)showType(n);
+    }
+  });
 });
 
 function renderTypeGrid(){
   const g=document.getElementById('typeGrid');
   g.innerHTML=TYPE_LIST.map(t=>{
     const d=TYPES[t.n];
-    return '<div class="type-item" onclick="showType('+t.n+')"><div class="type-circle" style="background:'+d.color+'"><span>'+d.icon+'</span></div><div class="type-name">'+d.name+'</div><div class="type-sub">'+d.subtitle+'</div></div>';
+    return '<div class="type-item" data-type="'+t.n+'"><div class="type-circle" style="background:'+d.color+'"><span>'+d.icon+'</span></div><div class="type-name">'+d.name+'</div><div class="type-sub">'+d.subtitle+'</div></div>';
   }).join('');
 }
 
